@@ -1,6 +1,6 @@
 @dznversion = "1.5"
-@afversion = "2.3.1"
-@sdversion = "3.7"
+@afversion = "~> 2.3.1"
+@sdversion = "~> 3.7"
 
 Pod::Spec.new do |s|
   s.name         	= "DZNPhotoPickerController"
@@ -21,8 +21,6 @@ Pod::Spec.new do |s|
                               '#import <SystemConfiguration/SystemConfiguration.h>'
 
   s.header_mappings_dir = 'Source'
-  s.dependency 'DZNPhotoPickerController/DZNPhotoService'
-  s.dependency 'DZNPhotoPickerController/UIImagePickerControllerExtended'
   s.dependency 'AFNetworking', @afversion
   s.dependency 'SDWebImage', @sdversion
   s.dependency 'DZNEmptyDataSet', '1.3.3'
