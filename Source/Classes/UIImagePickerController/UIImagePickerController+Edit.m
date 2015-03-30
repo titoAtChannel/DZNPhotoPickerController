@@ -37,6 +37,8 @@ static DZNPhotoEditorViewControllerCropMode _cropMode;
 
 - (void)didPickImage:(NSNotification *)notification
 {
+    [[NSNotificationCenter defaultCenter] removeObserver:self name:DZNPhotoPickerDidFinishPickingNotification object:nil];
+    
     if (!self.allowsEditing && self.delegate &&
         [self.delegate respondsToSelector:@selector(imagePickerController:didFinishPickingMediaWithInfo:)]) {
         
@@ -46,8 +48,6 @@ static DZNPhotoEditorViewControllerCropMode _cropMode;
         
         [self.delegate imagePickerController:self didFinishPickingMediaWithInfo:notification.userInfo];
     }
-    
-    [[NSNotificationCenter defaultCenter] removeObserver:self name:DZNPhotoPickerDidFinishPickingNotification object:nil];
 }
 
 @end

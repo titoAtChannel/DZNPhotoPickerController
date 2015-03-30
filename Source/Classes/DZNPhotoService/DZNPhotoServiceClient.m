@@ -14,8 +14,6 @@
 #import "DZNPhotoMetadata.h"
 #import "DZNPhotoTag.h"
 
-#import <AFNetworking/AFNetworkActivityIndicatorManager.h>
-
 @interface DZNPhotoServiceClient ()
 @property (nonatomic, copy) DZNHTTPRequestCompletion completion;
 @end
@@ -29,23 +27,11 @@
 {
     self = [super initWithBaseURL:baseURLForService(service)];
     if (self) {
-
-        _service = service;
-        _subscription = subscription;
-        
         self.requestSerializer = [AFJSONRequestSerializer serializer];
         self.responseSerializer = [AFHTTPResponseSerializer serializer];
         
-        [[AFNetworkActivityIndicatorManager sharedManager] setEnabled:YES];
-        
-        // Add basic auth to Bing service
-        if (_service == DZNPhotoPickerControllerServiceBingImages) {
-            
-            NSString *key = [self consumerKey];
-            
-            //Bing requires basic auth with password and user name as the consumer key.
-            [self.requestSerializer setAuthorizationHeaderFieldWithUsername:key password:key];
-        }
+        _service = service;
+        _subscription = subscription;
     }
     return self;
 }
@@ -69,6 +55,7 @@
     NSAssert([self consumerKey], @"'consumerKey' cannot be nil for %@", NSStringFromService(_service));
     NSAssert([self consumerSecret], @"'consumerSecret' cannot be nil for %@", NSStringFromService(_service));
     
+    
     NSMutableDictionary *params = [NSMutableDictionary new];
     [params setObject:[self consumerKey] forKey:keyForAPIConsumerKey(_service)];
     [params setObject:keyword forKey:keyForSearchTag(_service)];
@@ -86,25 +73,13 @@
     NSAssert(keyword, @"'keyword' cannot be nil for %@", NSStringFromService(_service));
     NSAssert((resultPerPage > 0), @"'result per page' must be higher than 0 for %@", NSStringFromService(_service));
     NSAssert([self consumerKey], @"'consumerKey' cannot be nil for %@", NSStringFromService(_service));
-    if (isConsumerSecretRequiredForService(_service)) {
-        NSAssert([self consumerSecret], @"'consumerSecret' cannot be nil for %@", NSStringFromService(_service));
-    }
+    NSAssert([self consumerSecret], @"'consumerSecret' cannot be nil for %@", NSStringFromService(_service));
     
     NSMutableDictionary *params = [NSMutableDictionary new];
-    
-    if (isConsumerKeyInParametersRequiredForService(_service)) {
-        [params setObject:[self consumerKey] forKey:keyForAPIConsumerKey(_service)];
-    }
-    
-    //Bing requires parameters to be wrapped in '' values. If I'm missing something like just choosing a different URLEncoding, or a different way to set parameters please help me understand. @dirtbikerdude.91 Thanks.
-    if (_service == DZNPhotoPickerControllerServiceBingImages) {
-        [params setObject:[NSString stringWithFormat:@"'%@'", keyword] forKey:keyForSearchTerm(_service)];
-    } else {
-        [params setObject:keyword forKey:keyForSearchTerm(_service)];
-    }
+    [params setObject:[self consumerKey] forKey:keyForAPIConsumerKey(_service)];
+    [params setObject:keyword forKey:keyForSearchTerm(_service)];
 
-    
-    if (_service != DZNPhotoPickerControllerServiceInstagram && _service != DZNPhotoPickerControllerServiceBingImages) {
+    if (_service != DZNPhotoPickerControllerServiceInstagram) {
         [params setObject:@(resultPerPage) forKey:keyForSearchResultPerPage(_service)];
     }
     if (_service == DZNPhotoPickerControllerService500px || _service == DZNPhotoPickerControllerServiceFlickr) {
@@ -132,14 +107,6 @@
         [params setObject:@"medium" forKey:@"safe"];
         if (page > 1) [params setObject:@((page - 1) * resultPerPage + 1) forKey:@"start"];
     }
-    else if (_service == DZNPhotoPickerControllerServiceBingImages)
-    {
-        [params setObject:@"'Moderate'" forKey:@"Adult"];
-        
-        //Default to size medium. Size Large causes some buggy behavior with download times.
-        [params setObject:@"'Size:Medium'" forKey:@"ImageFilters"];
-    }
-    
     return params;
 }
 
@@ -159,12 +126,12 @@
     return data;
 }
 
-- (NSArray *)parseObjects:(Class)class withJSON:(NSDictionary *)json
+- (NSArray *)objectListForObject:(NSString *)objectName withJSON:(NSDictionary *)json
 {
-    NSString *keyPath = keyPathForObjectName(_service, [class name]);
+    NSString *keyPath = keyPathForObjectName(_service, objectName);
     NSMutableArray *objects = [NSMutableArray arrayWithArray:[json valueForKeyPath:keyPath]];
     
-    if ([[class name] isEqualToString:[DZNPhotoTag name]]) {
+    if ([objectName isEqualToString:[DZNPhotoTag name]]) {
         
         if (_service == DZNPhotoPickerControllerServiceFlickr) {
             NSString *keyword = [json valueForKeyPath:@"tags.source"];
@@ -173,7 +140,7 @@
         
         return [DZNPhotoTag photoTagListFromService:_service withResponse:objects];
     }
-    else if ([[class name] isEqualToString:[DZNPhotoMetadata name]]) {
+    else if ([objectName isEqualToString:[DZNPhotoMetadata name]]) {
         return [DZNPhotoMetadata metadataListWithResponse:objects service:_service];
     }
     
@@ -188,7 +155,7 @@
     NSString *path = tagSearchUrlPathForService(_service);
     
     NSDictionary *params = [self tagsParamsWithKeyword:keyword];
-    [self getObject:[DZNPhotoTag class] path:path params:params completion:completion];
+    [self getObject:[DZNPhotoTag name] path:path params:params completion:completion];
 }
 
 - (void)searchPhotosWithKeyword:(NSString *)keyword page:(NSInteger)page resultPerPage:(NSInteger)resultPerPage completion:(DZNHTTPRequestCompletion)completion
@@ -196,29 +163,28 @@
     NSString *path = photoSearchUrlPathForService(_service);
 
     NSDictionary *params = [self photosParamsWithKeyword:keyword page:page resultPerPage:resultPerPage];
-    [self getObject:[DZNPhotoMetadata class] path:path params:params completion:completion];
+    [self getObject:[DZNPhotoMetadata name] path:path params:params completion:completion];
 }
 
-- (void)getObject:(Class)class path:(NSString *)path params:(NSDictionary *)params completion:(DZNHTTPRequestCompletion)completion
+- (void)getObject:(NSString *)objectName path:(NSString *)path params:(NSDictionary *)params completion:(DZNHTTPRequestCompletion)completion
 {
     _loading = YES;
     
     if (_service == DZNPhotoPickerControllerServiceInstagram) {
         NSString *keyword = [params objectForKey:keyForSearchTerm(_service)];
-        NSString *encodedKeyword = [keyword stringByReplacingOccurrencesOfString:@" " withString:@""];
-        path = [path stringByReplacingOccurrencesOfString:@"%@" withString:encodedKeyword];
+        path = [path stringByReplacingOccurrencesOfString:@"%@" withString:keyword];
     }
     else if (_service == DZNPhotoPickerControllerServiceFlickr) {
         path = @"";
     }
-        
+
     [self GET:path parameters:params success:^(AFHTTPRequestOperation *operation, id response) {
         
         NSData *data = [self processData:response];
         NSDictionary *json = [NSJSONSerialization JSONObjectWithData:data options:NSJSONReadingMutableLeaves | NSJSONReadingAllowFragments error:nil];
         
         _loading = NO;
-        if (completion) completion([self parseObjects:class withJSON:json], nil);
+        if (completion) completion([self objectListForObject:objectName withJSON:json], nil);
         
     } failure:^(AFHTTPRequestOperation *operation, NSError *error) {
         
