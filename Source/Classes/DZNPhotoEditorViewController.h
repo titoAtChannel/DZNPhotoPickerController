@@ -18,6 +18,8 @@
  */
 @interface DZNPhotoEditorViewController : UIViewController
 
+@property (strong, nonatomic) NSString *sendButtonTitle;
+
 /**
  Initializes a photo editor with a specified cropping mode (i.e. square, circular).
  This is a reserved method to be used internally by DZNPhotoPickerController. For custom usage of the editor, use initWithMetadata:cropMode:cropSize: or initWithImage:cropMode:cropSize:
@@ -27,8 +29,8 @@
  @param mode The crop size to be used.
  @return A new instance of the editor controller.
  */
-- (instancetype)initWithMetadata:(DZNPhotoMetadata *)metadata cropMode:(DZNPhotoEditorViewControllerCropMode)mode cropSize:(CGSize)size;
-- (instancetype)initWithMetadata:(DZNPhotoMetadata *)metadata cropMode:(DZNPhotoEditorViewControllerCropMode)mode;
+- (instancetype)initWithMetadata:(DZNPhotoMetadata *)metadata cropMode:(DZNPhotoEditorViewControllerCropMode)mode cropSize:(CGSize)size sendButtonTitle:(NSString *)sendButtonTitle;
+- (instancetype)initWithMetadata:(DZNPhotoMetadata *)metadata cropMode:(DZNPhotoEditorViewControllerCropMode)mode sendButtonTitle:(NSString *)sendButtonTitle;
 
 /**
  Initializes a photo editor with the specified image and cropping size.
@@ -38,8 +40,10 @@
  @param size The crop size to be used.
  @return A new instance of the editor controller.
  */
-- (instancetype)initWithImage:(UIImage *)image cropMode:(DZNPhotoEditorViewControllerCropMode)mode cropSize:(CGSize)size;
-- (instancetype)initWithImage:(UIImage *)image cropMode:(DZNPhotoEditorViewControllerCropMode)mode;
+- (instancetype)initWithImage:(UIImage *)image cropMode:(DZNPhotoEditorViewControllerCropMode)mode cropSize:(CGSize)size sendButtonTitle:(NSString *)sendButtonTitle;
+- (instancetype)initWithImage:(UIImage *)image cropMode:(DZNPhotoEditorViewControllerCropMode)mode sendButtonTitle:(NSString *)sendButtonTitle;
+
+- (instancetype)initWithSendButtonTitle:(NSString *)sendButtonTitle;
 
 /**
  Proxy class method to be called whenever the user picks a photo, with or without editing the image.

@@ -50,6 +50,8 @@ typedef void (^DZNPhotoPickerControllerCancellationBlock)(DZNPhotoPickerControll
 /** YES if auto-completion search is available while the user is typing on the search bar. This data uses Flickr's tag search API. Default is YES. */
 @property (nonatomic, assign) BOOL allowAutoCompletedSearch;
 
+@property (nonatomic, strong) NSString *sendButtonTitle;
+
 /**
  Initializes and returns a newly created picker controller, on edit mode only.
  @discussion This is a convenience method for initializing the receiver and pushing a photo edit view controller onto the navigation stack, with a presetted image to edit.

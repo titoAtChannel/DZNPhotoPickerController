@@ -503,7 +503,8 @@ Returns the custom collection view layout.
     }
     else if (self.navigationController.allowsEditing) {
         
-        DZNPhotoEditorViewController *controller = [[DZNPhotoEditorViewController alloc] initWithMetadata:metadata cropMode:self.navigationController.cropMode cropSize:self.navigationController.cropSize];
+        DZNPhotoEditorViewController *controller = [[DZNPhotoEditorViewController alloc] initWithMetadata:metadata cropMode:self.navigationController.cropMode cropSize:self.navigationController.cropSize sendButtonTitle:self.sendButtonTitle];
+        
         [self.navigationController pushViewController:controller animated:YES];
     }
     else {

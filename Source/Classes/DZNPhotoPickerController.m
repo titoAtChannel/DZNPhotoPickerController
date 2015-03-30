@@ -69,16 +69,28 @@ static DZNPhotoPickerControllerCancellationBlock _cancellationBlock;
 {
     [super viewDidLoad];
     
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(didFinishPickingPhoto:) name:DZNPhotoPickerDidFinishPickingNotification object:nil];
-    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(didFailPickingPhoto:) name:DZNPhotoPickerDidFailPickingNotification object:nil];
 }
 
 - (void)viewWillAppear:(BOOL)animated
 {
     [super viewWillAppear:animated];
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(didFinishPickingPhoto:) name:DZNPhotoPickerDidFinishPickingNotification object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(didFailPickingPhoto:) name:DZNPhotoPickerDidFailPickingNotification object:nil];
+
 
     if (self.isEditing) [self showPhotoEditorController];
     else [self showPhotoDisplayController];
+}
+
+- (void)viewWillDisappear:(BOOL)animated
+{
+    
+    [[NSNotificationCenter defaultCenter] removeObserver:self];
+    
+    [super viewWillDisappear:animated];
+    
+    
 }
 
 
@@ -154,6 +166,7 @@ static DZNPhotoPickerControllerCancellationBlock _cancellationBlock;
     [self setViewControllers:nil];
     
     DZNPhotoDisplayViewController *controller = [[DZNPhotoDisplayViewController alloc] init];
+    controller.sendButtonTitle = self.sendButtonTitle;
     
     if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone) {
         UIBarButtonItem *cancel = [[UIBarButtonItem alloc] initWithTitle:NSLocalizedString(@"Cancel", nil) style:UIBarButtonItemStylePlain target:self action:@selector(cancelPicker:)];
@@ -170,7 +183,7 @@ static DZNPhotoPickerControllerCancellationBlock _cancellationBlock;
 {
     [self setViewControllers:nil];
     
-    DZNPhotoEditorViewController *controller = [[DZNPhotoEditorViewController alloc] initWithImage:_editingImage cropMode:_cropMode cropSize:_cropSize];
+    DZNPhotoEditorViewController *controller = [[DZNPhotoEditorViewController alloc] initWithImage:_editingImage cropMode:_cropMode cropSize:_cropSize sendButtonTitle:self.sendButtonTitle];
     [self pushViewController:controller animated:NO];
 }
 
@@ -179,6 +192,7 @@ static DZNPhotoPickerControllerCancellationBlock _cancellationBlock;
  */
 - (void)didFinishPickingPhoto:(NSNotification *)notification
 {
+    
     if (self.finalizationBlock) {
         self.finalizationBlock(self, notification.userInfo);
         return;

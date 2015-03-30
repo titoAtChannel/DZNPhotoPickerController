@@ -10,12 +10,13 @@
 
 #import "DZNPhotoPickerControllerConstants.h"
 
-NSString *const DZNPhotoPickerControllerCropMode =              @"com.dzn.photoPicker.cropMode";
-NSString *const DZNPhotoPickerControllerCropZoomScale =         @"com.dzn.photoPicker.cropZoomScale";
-NSString *const DZNPhotoPickerControllerPhotoMetadata =         @"com.dzn.photoPicker.photoMetadata";
+NSString *const DZNPhotoPickerControllerCropMode = @"com.dzn.photoPicker.cropMode";
+NSString *const DZNPhotoPickerControllerCropZoomScale = @"com.dzn.photoPicker.cropZoomScale";
+NSString *const DZNPhotoPickerControllerPhotoMetadata = @"com.dzn.photoPicker.photoMetadata";
 
-NSString *const DZNPhotoPickerDidFinishPickingNotification =    @"com.dzn.photoPicker.didFinishPickingNotification";
-NSString *const DZNPhotoPickerDidFailPickingNotification =      @"com.dzn.photoPicker.didFinishPickingWithErrorNotification";
+NSString *const DZNPhotoPickerDidFinishPickingNotification = @"com.dzn.photoPicker.didFinishPickingNotification";
+NSString *const DZNPhotoPickerDidFailPickingNotification = @"com.dzn.photoPicker.idFinishPickingWithErrorNotification";
+NSString *const DZNPhotoPickerDidCancelPickingNotification = @"com.dzn.photoPicker.idFinishPickingWithCancelNotification";
 
 
 NSString *NSStringFromService(DZNPhotoPickerControllerServices service)
@@ -25,23 +26,25 @@ NSString *NSStringFromService(DZNPhotoPickerControllerServices service)
         case DZNPhotoPickerControllerServiceFlickr:         return @"Flickr";
         case DZNPhotoPickerControllerServiceInstagram:      return @"Instagram";
         case DZNPhotoPickerControllerServiceGoogleImages:   return @"Google";
-        case DZNPhotoPickerControllerServiceBingImages:     return @"Bing";
         default:                                            return nil;
     }
 }
 
 DZNPhotoPickerControllerServices DZNPhotoServiceFromName(NSString *name)
 {
-    if ([name isEqualToString:NSStringFromService(DZNPhotoPickerControllerService500px)])           return DZNPhotoPickerControllerService500px;
-    if ([name isEqualToString:NSStringFromService(DZNPhotoPickerControllerServiceFlickr)])          return DZNPhotoPickerControllerServiceFlickr;
-    if ([name isEqualToString:NSStringFromService(DZNPhotoPickerControllerServiceInstagram)])       return DZNPhotoPickerControllerServiceInstagram;
-    if ([name isEqualToString:NSStringFromService(DZNPhotoPickerControllerServiceGoogleImages)])    return DZNPhotoPickerControllerServiceGoogleImages;
-    if ([name isEqualToString:NSStringFromService(DZNPhotoPickerControllerServiceBingImages)])      return DZNPhotoPickerControllerServiceBingImages;
+    if ([name isEqualToString:NSStringFromService(DZNPhotoPickerControllerServiceGoogleImages)])  return DZNPhotoPickerControllerServiceGoogleImages;
+    if ([name isEqualToString:NSStringFromService(DZNPhotoPickerControllerService500px)])         return DZNPhotoPickerControllerService500px;
+    if ([name isEqualToString:NSStringFromService(DZNPhotoPickerControllerServiceFlickr)])        return DZNPhotoPickerControllerServiceFlickr;
+    if ([name isEqualToString:NSStringFromService(DZNPhotoPickerControllerServiceInstagram)])     return DZNPhotoPickerControllerServiceInstagram;
+    
     return -1;
 }
 
 DZNPhotoPickerControllerServices DZNFirstPhotoServiceFromPhotoServices(DZNPhotoPickerControllerServices services)
 {
+    if ((services & DZNPhotoPickerControllerServiceGoogleImages) > 0) {
+        return DZNPhotoPickerControllerServiceGoogleImages;
+    }
     if ((services & DZNPhotoPickerControllerService500px) > 0) {
         return DZNPhotoPickerControllerService500px;
     }
@@ -51,20 +54,16 @@ DZNPhotoPickerControllerServices DZNFirstPhotoServiceFromPhotoServices(DZNPhotoP
     if ((services & DZNPhotoPickerControllerServiceInstagram) > 0) {
         return DZNPhotoPickerControllerServiceInstagram;
     }
-    if ((services & DZNPhotoPickerControllerServiceGoogleImages) > 0) {
-        return DZNPhotoPickerControllerServiceGoogleImages;
-    }
-    if ((services & DZNPhotoPickerControllerServiceBingImages) > 0) {
-        return DZNPhotoPickerControllerServiceBingImages;
-    }
-    return -1;
+    
+    return 0;
 }
-
 
 NSArray *NSArrayFromServices(DZNPhotoPickerControllerServices services)
 {
     NSMutableArray *titles = [NSMutableArray array];
-    
+    if ((services & DZNPhotoPickerControllerServiceGoogleImages) > 0) {
+        [titles addObject:NSStringFromService(DZNPhotoPickerControllerServiceGoogleImages)];
+    }
     if ((services & DZNPhotoPickerControllerService500px) > 0) {
         [titles addObject:NSStringFromService(DZNPhotoPickerControllerService500px)];
     }
@@ -74,23 +73,6 @@ NSArray *NSArrayFromServices(DZNPhotoPickerControllerServices services)
     if ((services & DZNPhotoPickerControllerServiceInstagram) > 0) {
         [titles addObject:NSStringFromService(DZNPhotoPickerControllerServiceInstagram)];
     }
-    if ((services & DZNPhotoPickerControllerServiceGoogleImages) > 0) {
-        [titles addObject:NSStringFromService(DZNPhotoPickerControllerServiceGoogleImages)];
-    }
-    if ((services & DZNPhotoPickerControllerServiceBingImages) > 0) {
-        [titles addObject:NSStringFromService(DZNPhotoPickerControllerServiceBingImages)];
-    }
+    
     return [NSArray arrayWithArray:titles];
-}
-
-BOOL isConsumerSecretRequiredForService(DZNPhotoPickerControllerServices services)
-{
-    if (services == DZNPhotoPickerControllerServiceBingImages) return NO;
-    return YES;
-}
-
-BOOL isConsumerKeyInParametersRequiredForService(DZNPhotoPickerControllerServices services)
-{
-    if (services == DZNPhotoPickerControllerServiceBingImages) return NO;
-    return YES;
 }

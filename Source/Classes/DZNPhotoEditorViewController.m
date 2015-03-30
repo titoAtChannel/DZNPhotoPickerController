@@ -66,17 +66,27 @@ typedef NS_ENUM(NSInteger, DZNPhotoAspect) {
     return nil;
 }
 
-- (instancetype)initWithMetadata:(DZNPhotoMetadata *)metadata cropMode:(DZNPhotoEditorViewControllerCropMode)mode
-{
-    NSAssert(mode != DZNPhotoEditorViewControllerCropModeCustom, @"Expecting other cropMode than 'custom' for edition. Instead, use initWithMetadata:cropMode:cropSize:");
-    
-    return [self initWithMetadata:metadata cropMode:mode cropSize:CGSizeZero];
-}
-
-- (instancetype)initWithMetadata:(DZNPhotoMetadata *)metadata cropMode:(DZNPhotoEditorViewControllerCropMode)mode cropSize:(CGSize)size
+- (instancetype)initWithSendButtonTitle:(NSString *)sendButtonTitle
 {
     self = [super init];
     if (self) {
+        self.sendButtonTitle = sendButtonTitle;
+    }
+    return nil;
+}
+
+- (instancetype)initWithMetadata:(DZNPhotoMetadata *)metadata cropMode:(DZNPhotoEditorViewControllerCropMode)mode sendButtonTitle:(NSString *)sendButtonTitle
+{
+    NSAssert(mode != DZNPhotoEditorViewControllerCropModeCustom, @"Expecting other cropMode than 'custom' for edition. Instead, use initWithMetadata:cropMode:cropSize:");
+    
+    return [self initWithMetadata:metadata cropMode:mode cropSize:CGSizeZero sendButtonTitle:sendButtonTitle];
+}
+
+- (instancetype)initWithMetadata:(DZNPhotoMetadata *)metadata cropMode:(DZNPhotoEditorViewControllerCropMode)mode cropSize:(CGSize)size sendButtonTitle:(NSString *)sendButtonTitle
+{
+    self = [super init];
+    if (self) {
+        self.sendButtonTitle = sendButtonTitle;
         self.photoMetadata = metadata;
         self.cropMode = mode;
         self.cropSize = size;
@@ -84,17 +94,18 @@ typedef NS_ENUM(NSInteger, DZNPhotoAspect) {
     return self;
 }
 
-- (instancetype)initWithImage:(UIImage *)image cropMode:(DZNPhotoEditorViewControllerCropMode)mode
+- (instancetype)initWithImage:(UIImage *)image cropMode:(DZNPhotoEditorViewControllerCropMode)mode  sendButtonTitle:(NSString *)sendButtonTitle
 {
     NSAssert(mode != DZNPhotoEditorViewControllerCropModeCustom, @"Expecting other cropMode than 'custom' for edition. Instead, use initWithImage:cropMode:cropSize:");
     
-    return [self initWithImage:image cropMode:mode cropSize:CGSizeZero];
+    return [self initWithImage:image cropMode:mode cropSize:CGSizeZero sendButtonTitle:sendButtonTitle];
 }
 
-- (instancetype)initWithImage:(UIImage *)image cropMode:(DZNPhotoEditorViewControllerCropMode)mode cropSize:(CGSize)size
+- (instancetype)initWithImage:(UIImage *)image cropMode:(DZNPhotoEditorViewControllerCropMode)mode cropSize:(CGSize)size  sendButtonTitle:(NSString *)sendButtonTitle
 {
     self = [super init];
     if (self) {
+        self.sendButtonTitle = sendButtonTitle;
         self.editingImage = image;
         self.cropMode = mode;
         self.cropSize = size;
@@ -120,11 +131,11 @@ typedef NS_ENUM(NSInteger, DZNPhotoAspect) {
 
 - (void)viewWillAppear:(BOOL)animated
 {
-    [super viewWillAppear:animated];
+    [self setBarsHidden];
     
     [self prepareSubviews];
     
-    [self setBarsHidden:YES];
+    [super viewWillAppear:animated];
 }
 
 - (void)viewDidAppear:(BOOL)animated
@@ -134,14 +145,14 @@ typedef NS_ENUM(NSInteger, DZNPhotoAspect) {
 
 - (void)viewWillDisappear:(BOOL)animated
 {
-	[super viewWillDisappear:animated];
+    [self setBarsVisible];
     
-    [self setBarsHidden:NO];
+    [super viewWillDisappear:animated];
 }
 
 - (void)viewDidDisappear:(BOOL)animated
 {
-	[super viewDidDisappear:animated];
+    [super viewDidDisappear:animated];
 }
 
 
@@ -161,6 +172,24 @@ typedef NS_ENUM(NSInteger, DZNPhotoAspect) {
         
         [_scrollView addSubview:self.imageView];
         
+        CGSize imageSize = CGSizeAspectFit(_imageView.image.size, _imageView.frame.size);
+        
+        
+        if (_cropMode == DZNPhotoEditorViewControllerCropModeCircular) {
+            
+            CGRect viewRect = [[[[UIApplication sharedApplication] windows] lastObject] frame];
+            CGFloat diameter = viewRect.size.width-(kDZNPhotoEditorViewControllerInnerEdgeInset*2);
+            
+            
+            if (MIN(imageSize.height, imageSize.width) < diameter) {
+                _scrollView.minimumZoomScale = diameter / MIN(imageSize.height, imageSize.width);
+            }
+            
+            if (_scrollView.maximumZoomScale < _scrollView.minimumZoomScale) {
+                _scrollView.maximumZoomScale = _scrollView.minimumZoomScale * 2.0;
+            }
+        }
+        
         [_scrollView setZoomScale:_scrollView.minimumZoomScale];
     }
     return _scrollView;
@@ -169,7 +198,7 @@ typedef NS_ENUM(NSInteger, DZNPhotoAspect) {
 - (UIImageView *)imageView
 {
     if (!_imageView)
-    {        
+    {
         _imageView = [[UIImageView alloc] initWithFrame:self.view.bounds];
         _imageView.contentMode = UIViewContentModeScaleAspectFit;
         _imageView.image = _editingImage;
@@ -188,8 +217,19 @@ typedef NS_ENUM(NSInteger, DZNPhotoAspect) {
         [_leftButton addTarget:self action:@selector(cancelEdition:) forControlEvents:UIControlEventTouchUpInside];
         [_bottomView addSubview:_leftButton];
         
-        _rightButton = [self buttonWithTitle:NSLocalizedString(@"Choose", nil)];
+        
+        if (self.sendButtonTitle) {
+            _rightButton = [self buttonWithTitle:self.sendButtonTitle];
+        }
+        else {
+            _rightButton = [self buttonWithTitle:NSLocalizedString(@"Choose", nil)];
+        }
+        
         [_rightButton addTarget:self action:@selector(acceptEdition:) forControlEvents:UIControlEventTouchUpInside];
+        
+        [_rightButton setTitleColor:[UIColor yellowColor] forState:UIControlStateNormal];
+        [_rightButton setTitleColor:[UIColor yellowColor] forState:UIControlStateHighlighted];
+        [[_rightButton titleLabel] setFont:[UIFont boldSystemFontOfSize:18.0]];
         [_bottomView addSubview:_rightButton];
         
         NSMutableDictionary *views = [[NSMutableDictionary alloc] initWithDictionary:@{@"leftButton": _leftButton, @"rightButton": _rightButton}];
@@ -229,7 +269,7 @@ typedef NS_ENUM(NSInteger, DZNPhotoAspect) {
     }
     return _bottomView;
 }
-    
+
 - (UIActivityIndicatorView *)activityIndicator
 {
     if (!_activityIndicator)
@@ -320,7 +360,7 @@ DZNPhotoAspect photoAspectFromSize(CGSize aspectRatio)
     
     // Create the image context
     UIGraphicsBeginImageContextWithOptions(bounds.size, NO, 0);
-
+    
     // Create the bezier path & drawing
     UIBezierPath *clipPath = [UIBezierPath bezierPath];
     [clipPath moveToPoint:CGPointMake(width, margin)];
@@ -335,19 +375,22 @@ DZNPhotoAspect photoAspectFromSize(CGSize aspectRatio)
     [clipPath addLineToPoint:CGPointMake(width, margin+height)];
     [clipPath addLineToPoint:CGPointMake(width, bounds.size.height)];
     [clipPath closePath];
-    [[UIColor colorWithWhite:0 alpha:0.5] setFill];
+    //[[UIColor colorWithWhite:0 alpha:0.5] setFill];
     [clipPath fill];
     
     // Add the square crop
     CGRect rect = CGRectMake(lineWidth/2, margin+lineWidth/2, width-lineWidth, _cropSize.height-lineWidth);
     UIBezierPath *maskPath = [UIBezierPath bezierPathWithRect:rect];
-    [[UIColor colorWithWhite:1.0 alpha:0.5] setStroke];
+    //[[UIColor colorWithWhite:1.0 alpha:0.5] setStroke];
     maskPath.lineWidth = lineWidth;
     [maskPath stroke];
     
     //Create the image using the current context.
     UIImage *_image = UIGraphicsGetImageFromCurrentImageContext();
     UIGraphicsEndImageContext();
+    
+    //[_scrollView setUserInteractionEnabled:NO];
+    [_bottomView setBackgroundColor:[UIColor colorWithHue:0 saturation:0 brightness:0 alpha:0.3]];
     
     return _image;
 }
@@ -384,7 +427,7 @@ DZNPhotoAspect photoAspectFromSize(CGSize aspectRatio)
     
     UIImage *_image = UIGraphicsGetImageFromCurrentImageContext();
     UIGraphicsEndImageContext();
-
+    
     return _image;
 }
 
@@ -399,7 +442,7 @@ DZNPhotoAspect photoAspectFromSize(CGSize aspectRatio)
     CGRect guideRect = [self guideRect];
     
     CGFloat verticalMargin = (viewRect.size.height-guideRect.size.height)/2;
-
+    
     guideRect.origin.x = -_scrollView.contentOffset.x;
     guideRect.origin.y = -_scrollView.contentOffset.y - verticalMargin;
     
@@ -422,18 +465,18 @@ DZNPhotoAspect photoAspectFromSize(CGSize aspectRatio)
         CGFloat scale = 1.0 + round(increment * 10) / 10.0;
         
         UIGraphicsBeginImageContextWithOptions(circularRect.size, NO, 0.0);{
-
+            
             CGContextRef context = UIGraphicsGetCurrentContext();
             CGContextTranslateCTM(context, -kDZNPhotoEditorViewControllerInnerEdgeInset, -kDZNPhotoEditorViewControllerInnerEdgeInset);
             CGContextScaleCTM(context, scale, scale);
-
+            
             [_image drawInRect:circularRect];
             
             _image = UIGraphicsGetImageFromCurrentImageContext();
             UIGraphicsEndImageContext();
         }
     }
-
+    
     return _image;
 }
 
@@ -472,13 +515,22 @@ DZNPhotoAspect photoAspectFromSize(CGSize aspectRatio)
     }
 }
 
-- (void)setBarsHidden:(BOOL)hidden
+- (void)setBarsHidden
 {
     if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone) {
-        [[UIApplication sharedApplication] setStatusBarHidden:hidden withAnimation:UIStatusBarAnimationFade];
+        [[UIApplication sharedApplication] setStatusBarHidden:YES withAnimation:UIStatusBarAnimationFade];
     }
-    
-    [self.navigationController setNavigationBarHidden:hidden animated:!hidden];
+    UIBarButtonItem *newBackButton = [[UIBarButtonItem alloc] initWithTitle:@"Back" style:UIBarButtonItemStyleBordered target:self action:@selector(cancelEdition:)];
+    self.navigationItem.leftBarButtonItem=newBackButton;
+    self.navigationController.navigationBar.barTintColor = [UIColor blackColor];
+}
+
+- (void)setBarsVisible
+{
+    if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPhone) {
+        [[UIApplication sharedApplication] setStatusBarHidden:NO withAnimation:UIStatusBarAnimationFade];
+    }
+    self.navigationController.navigationBar.barTintColor = nil;
 }
 
 - (void)updateViewConstraints
@@ -499,28 +551,34 @@ DZNPhotoAspect photoAspectFromSize(CGSize aspectRatio)
     if (!_imageView.image)
     {
         __weak DZNPhotoEditorViewController *weakSelf = self;
-        __weak UIButton *_button = _rightButton;
-        _button.enabled = NO;
-        
+        __weak UIButton *_rButton = _rightButton;
+        _rButton.enabled = NO;
+        _rButton.hidden = YES;
+        __weak UIButton *_lButton = _leftButton;
+        _lButton.enabled = NO;
+        _lButton.hidden = YES;
         [_activityIndicator startAnimating];
         
-        [_imageView sd_setImageWithPreviousCachedImageWithURL:_photoMetadata.sourceURL
-                                          andPlaceholderImage:nil
-                                                      options:SDWebImageCacheMemoryOnly|SDWebImageProgressiveDownload|SDWebImageRetryFailed
-                                                     progress:NULL
-                                                    completed:^(UIImage *image, NSError *error, SDImageCacheType cacheType, NSURL *imageURL) {
-                                                        if (!error) {
-                                                            _button.enabled = YES;
-                                                        }
-                                                        else {
-                                                            [[NSNotificationCenter defaultCenter] postNotificationName:DZNPhotoPickerDidFailPickingNotification
-                                                                                                                object:nil
-                                                                                                              userInfo:@{@"error": error}];
-                                                        }
-                                                        
-                                                        [[weakSelf activityIndicator] removeFromSuperview];
-                                                        [weakSelf updateScrollViewContentInset];
-                                                     }];
+        [_imageView sd_setImageWithURL:_photoMetadata.sourceURL placeholderImage:nil
+                            options:SDWebImageCacheMemoryOnly|SDWebImageProgressiveDownload|SDWebImageRetryFailed
+                          completed:^(UIImage *image, NSError *error, SDImageCacheType cacheType, NSURL* imageURL) {
+                              if (!error) {
+                                  _rButton.hidden = NO;
+                                  _rButton.enabled = YES;
+                                  _lButton.hidden = NO;
+                                  _lButton.enabled = YES;
+                                  weakSelf.navigationItem.leftBarButtonItem.title = @"";
+                                  weakSelf.navigationItem.leftBarButtonItem.enabled = NO;
+                              }
+                              else {
+                                  [[NSNotificationCenter defaultCenter] postNotificationName:DZNPhotoPickerDidFailPickingNotification
+                                                                                      object:nil
+                                                                                    userInfo:@{@"error": error}];
+                              }
+                              
+                              [[weakSelf activityIndicator] removeFromSuperview];
+                              [weakSelf updateScrollViewContentInset];
+                          }];
     }
     else {
         [self updateScrollViewContentInset];
@@ -543,7 +601,14 @@ DZNPhotoAspect photoAspectFromSize(CGSize aspectRatio)
     CGFloat maskHeight = (_cropMode == DZNPhotoEditorViewControllerCropModeCircular) ? _cropSize.width-(kDZNPhotoEditorViewControllerInnerEdgeInset*2) : _cropSize.height;
     
     CGFloat hInset = (_cropMode == DZNPhotoEditorViewControllerCropModeCircular) ? kDZNPhotoEditorViewControllerInnerEdgeInset : 0.0;
-    CGFloat vInset = fabs((maskHeight-imageSize.height)/2);
+    
+    CGFloat vInset = -(_imageView.frame.size.height - _scrollView.frame.size.height)/2.0 + 0.5;
+    
+    if (imageSize.height > _cropSize.height) {
+        vInset += (_scrollView.frame.size.height - imageSize.height)/2.0 - ((maskHeight + (_scrollView.frame.size.height - maskHeight)/2.0) - imageSize.height);
+    }
+    
+    NSLog(@"vinset: %f %f %f %f %f", vInset, _imageView.image.size.height, imageSize.height, _imageView.frame.size.height, _scrollView.frame.size.height);
     
     if (vInset == 0) vInset = 0.5;
     
@@ -615,7 +680,6 @@ DZNPhotoAspect photoAspectFromSize(CGSize aspectRatio)
     if (metadata.authorName) [attributes setObject:metadata.authorName forKey:@"author_name"];
     if (metadata.authorUsername) [attributes setObject:metadata.authorUsername forKey:@"author_username"];
     if (metadata.authorProfileURL) [attributes setObject:metadata.authorProfileURL forKey:@"author_profile_url"];
-    if (metadata.contentType) [attributes setObject:metadata.contentType forKey:@"content_type"];
     
     if (attributes.allKeys.count > 0) {
         [userInfo setObject:attributes forKey:DZNPhotoPickerControllerPhotoMetadata];
@@ -644,7 +708,7 @@ DZNPhotoAspect photoAspectFromSize(CGSize aspectRatio)
 
 - (void)scrollViewDidZoom:(UIScrollView *)scrollView
 {
-    //[self updateScrollViewContentInset];
+    [self updateScrollViewContentInset];
 }
 
 

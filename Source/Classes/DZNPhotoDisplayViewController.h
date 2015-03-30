@@ -26,6 +26,8 @@
 /** YES if the controller started a request and loading content. */
 @property (nonatomic, readonly, getter = isLoading) BOOL loading;
 
+@property (nonatomic, strong) NSString *sendButtonTitle;
+
 /**
  Stops any loading HTTP request.
  */

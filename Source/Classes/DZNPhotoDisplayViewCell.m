@@ -51,9 +51,9 @@
     [self.imageView sd_cancelCurrentImageLoad];
     
     [self.imageView sd_setImageWithURL:URL
-                      placeholderImage:nil
-                               options:SDWebImageCacheMemoryOnly
-                             completed:NULL];
+                   placeholderImage:nil
+                            options:SDWebImageCacheMemoryOnly
+                          completed:NULL];
 }
 
 
