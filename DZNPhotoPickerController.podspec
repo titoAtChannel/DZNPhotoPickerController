@@ -32,7 +32,11 @@ Pod::Spec.new do |s|
   s.subspec 'DZNPhotoService' do |service|
     service.source_files     =  'Source/Classes/DZNPhotoService/*.{h,m}',
                                 'Source/Classes/DZNPhotoPickerControllerConstants.h'
-    service.dependency 'AFNetworking', @afversion
+    service.dependency 'AFNetworking/NSURLConnection', @afversion
+    service.dependency 'AFNetworking/NSURLSession', @afversion
+    service.dependency 'AFNetworking/Reachability', @afversion
+    service.dependency 'AFNetworking/Security', @afversion
+    service.dependency 'AFNetworking/Serialization', @afversion
   end
 
   s.subspec 'UIImagePickerControllerExtended' do |extension|
