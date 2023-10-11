@@ -21,7 +21,11 @@ Pod::Spec.new do |s|
                               '#import <SystemConfiguration/SystemConfiguration.h>'
 
   s.header_mappings_dir = 'Source'
-  s.dependency 'AFNetworking', @afversion
+  s.dependency 'AFNetworking/NSURLConnection', @afversion
+  s.dependency 'AFNetworking/NSURLSession', @afversion
+  s.dependency 'AFNetworking/Reachability', @afversion
+  s.dependency 'AFNetworking/Security', @afversion
+  s.dependency 'AFNetworking/Serialization', @afversion
   s.dependency 'SDWebImage', @sdversion
   s.dependency 'DZNEmptyDataSet', '1.3.3'
 
