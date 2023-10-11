@@ -21,10 +21,6 @@ Pod::Spec.new do |s|
                               '#import <SystemConfiguration/SystemConfiguration.h>'
 
   s.header_mappings_dir = 'Source'
-  s.dependency 'AFNetworking/NSURLConnection', @afversion
-  s.dependency 'AFNetworking/NSURLSession', @afversion
-  s.dependency 'AFNetworking/Reachability', @afversion
-  s.dependency 'AFNetworking/Security', @afversion
   s.dependency 'AFNetworking/Serialization', @afversion
   s.dependency 'SDWebImage', @sdversion
   s.dependency 'DZNEmptyDataSet', '1.3.3'
@@ -32,10 +28,6 @@ Pod::Spec.new do |s|
   s.subspec 'DZNPhotoService' do |service|
     service.source_files     =  'Source/Classes/DZNPhotoService/*.{h,m}',
                                 'Source/Classes/DZNPhotoPickerControllerConstants.h'
-    service.dependency 'AFNetworking/NSURLConnection', @afversion
-    service.dependency 'AFNetworking/NSURLSession', @afversion
-    service.dependency 'AFNetworking/Reachability', @afversion
-    service.dependency 'AFNetworking/Security', @afversion
     service.dependency 'AFNetworking/Serialization', @afversion
   end
 
