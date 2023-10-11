@@ -21,14 +21,14 @@ Pod::Spec.new do |s|
                               '#import <SystemConfiguration/SystemConfiguration.h>'
 
   s.header_mappings_dir = 'Source'
-  s.dependency 'AFNetworking/Serialization', @afversion
+  s.dependency 'AFNetworking', @afversion
   s.dependency 'SDWebImage', @sdversion
   s.dependency 'DZNEmptyDataSet', '1.3.3'
 
   s.subspec 'DZNPhotoService' do |service|
     service.source_files     =  'Source/Classes/DZNPhotoService/*.{h,m}',
                                 'Source/Classes/DZNPhotoPickerControllerConstants.h'
-    service.dependency 'AFNetworking/Serialization', @afversion
+    service.dependency 'AFNetworking', @afversion
   end
 
   s.subspec 'UIImagePickerControllerExtended' do |extension|
