@@ -1,10 +1,10 @@
-// swift-tools-version:5.5
+// swift-tools-version:5.9
 import PackageDescription
 
 let package = Package(
     name: "DZNPhotoPickerController",
     platforms: [
-        .iOS(.v13)
+        .iOS(.v16)
     ],
     products: [
         .library(
@@ -15,7 +15,7 @@ let package = Package(
     dependencies: [
         .package(url: "https://github.com/AFNetworking/AFNetworking.git", from: "4.0.0"),
         .package(url: "https://github.com/SDWebImage/SDWebImage.git", from: "5.0.0"),
-        .package(url: "https://github.com/dzenbot/DZNEmptyDataSet.git", from: "1.3.3")
+        .package(url: "https://github.com/dzenbot/DZNEmptyDataSet", branch: "master")
     ],
     targets: [
         .target(
@@ -40,6 +40,5 @@ let package = Package(
             name: "UIImagePickerControllerExtended",
             path: "Source/Classes/UIImagePickerController"
         )
-    ],
-    swiftLanguageVersions: [.v5]
+    ]
 )
