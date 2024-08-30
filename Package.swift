@@ -1,4 +1,6 @@
-// swift-tools-version:5.9
+// swift-tools-version: 5.10
+// The swift-tools-version declares the minimum version of Swift required to build this package.
+
 import PackageDescription
 
 let package = Package(
@@ -7,10 +9,10 @@ let package = Package(
         .iOS(.v16)
     ],
     products: [
+        // Products define the executables and libraries a package produces, making them visible to other packages.
         .library(
             name: "DZNPhotoPickerController",
-            targets: ["DZNPhotoPickerController"]
-        )
+            targets: ["DZNPhotoPickerController"]),
     ],
     dependencies: [
         .package(url: "https://github.com/AFNetworking/AFNetworking.git", from: "4.0.0"),
@@ -18,27 +20,12 @@ let package = Package(
         .package(url: "https://github.com/dzenbot/DZNEmptyDataSet", branch: "master")
     ],
     targets: [
+        // Targets are the basic building blocks of a package, defining a module or a test suite.
+        // Targets can depend on other targets in this package and products from dependencies.
         .target(
-            name: "DZNPhotoPickerController",
-            dependencies: [
-                .product(name: "AFNetworking", package: "AFNetworking"),
-                .product(name: "SDWebImage", package: "SDWebImage"),
-                .product(name: "DZNEmptyDataSet", package: "DZNEmptyDataSet")
-            ],
-            path: "Source/Classes",
-            exclude: ["Source/Classes/UIImagePickerController"],
-            resources: [.process("../Resources")]
-        ),
-        .target(
-            name: "DZNPhotoService",
-            dependencies: [
-                .product(name: "AFNetworking", package: "AFNetworking")
-            ],
-            path: "Source/Classes/DZNPhotoService"
-        ),
-        .target(
-            name: "UIImagePickerControllerExtended",
-            path: "Source/Classes/UIImagePickerController"
-        )
+            name: "DZNPhotoPickerController"),
+        .testTarget(
+            name: "DZNPhotoPickerControllerTests",
+            dependencies: ["DZNPhotoPickerController"]),
     ]
 )
