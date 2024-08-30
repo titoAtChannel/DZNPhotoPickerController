@@ -25,9 +25,9 @@ let package = Package(
                 .product(name: "SDWebImage", package: "SDWebImage"),
                 .product(name: "DZNEmptyDataSet", package: "DZNEmptyDataSet")
             ],
-            path: "Source",
+            path: "Source/Classes",
             exclude: ["Source/Classes/UIImagePickerController"],
-            resources: [.copy("Source/Resources")]
+            resources: [.process("../Resources")]
         ),
         .target(
             name: "DZNPhotoService",
